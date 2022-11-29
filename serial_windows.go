@@ -437,7 +437,14 @@ func nativeOpen(portName string, mode *Mode) (*windowsPort, error) {
 			params.Flags |= dcbRTSControlEnable
 		}
 	}
-	params.Flags &^= dcbOutXCTSFlow
+	if mode.FlowControl == RtsCtsFlowControl {
+		// Enables CTS output flow control
+		params.Flags |= dcbOutXCTSFlow
+		// RTS input flow control could be added, but likely isn't necessary on the Windows side.
+		// It would require meshing with the way RTS control is implemented in this file.
+	} else {
+		params.Flags &^= dcbOutXCTSFlow
+	}
 	params.Flags &^= dcbOutXDSRFlow
 	params.Flags &^= dcbDSRSensitivity
 	params.Flags |= dcbTXContinueOnXOFF

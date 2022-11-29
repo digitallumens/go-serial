@@ -89,6 +89,7 @@ type Mode struct {
 	Parity            Parity           // Parity (see Parity type for more info)
 	StopBits          StopBits         // Stop bits (see StopBits type for more info)
 	InitialStatusBits *ModemOutputBits // Initial output modem bits status (if nil defaults to DTR=true and RTS=true)
+	FlowControl       FlowControl      // OS Flow control setting for port
 }
 
 // Parity describes a serial port parity setting
@@ -117,6 +118,18 @@ const (
 	OnePointFiveStopBits
 	// TwoStopBits sets 2 stop bits
 	TwoStopBits
+)
+
+// FlowControl describes a serial port flow control setting
+type FlowControl int
+
+const (
+	// NoFlowControl does not enable OS serial Flow Control (default)
+	NoFlowControl FlowControl = iota
+	// XonXoffFlowControl enables OS serial character flow control
+	XonXoffFlowControl
+	// RtsCtsFlowControl enables OS flow control using RTS & CTS lines
+	RtsCtsFlowControl
 )
 
 // PortError is a platform independent error type for serial ports
