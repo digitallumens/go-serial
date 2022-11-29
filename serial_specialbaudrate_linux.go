@@ -1,5 +1,5 @@
-// +build linux
-// +build !ppc64le
+//go:build linux && !ppc64le
+// +build linux,!ppc64le
 
 //
 // Copyright 2014-2021 Cristian Maglie. All rights reserved.
