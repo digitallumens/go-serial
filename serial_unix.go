@@ -1,5 +1,5 @@
 //
-// Copyright 2014-2021 Cristian Maglie. All rights reserved.
+// Copyright 2014-2023 Cristian Maglie. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 //
@@ -116,6 +116,20 @@ func (port *unixPort) Write(p []byte) (n int, err error) {
 		n = 0
 	}
 	return
+}
+
+func (port *unixPort) Break(t time.Duration) error {
+	if err := unix.IoctlSetInt(port.handle, ioctlTiocsbrk, 0); err != nil {
+		return err
+	}
+
+	time.Sleep(t)
+
+	if err := unix.IoctlSetInt(port.handle, ioctlTioccbrk, 0); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (port *unixPort) SetMode(mode *Mode) error {
@@ -309,8 +323,8 @@ func nativeGetPortsList() ([]string, error) {
 
 		portName := devFolder + "/" + f.Name()
 
-		// Check if serial port is real or is a placeholder serial port "ttySxx"
-		if strings.HasPrefix(f.Name(), "ttyS") {
+		// Check if serial port is real or is a placeholder serial port "ttySxx" or "ttyHSxx"
+		if strings.HasPrefix(f.Name(), "ttyS") || strings.HasPrefix(f.Name(), "ttyHS") {
 			port, err := nativeOpen(portName, &Mode{})
 			if err != nil {
 				continue

@@ -1,5 +1,5 @@
 //
-// Copyright 2014-2021 Cristian Maglie. All rights reserved.
+// Copyright 2014-2023 Cristian Maglie. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 //
@@ -117,6 +117,10 @@ func (port *windowsPort) Write(p []byte) (int, error) {
 		err = getOverlappedResult(port.handle, ev, &writed, true)
 	}
 	return int(writed), err
+}
+
+func (port *windowsPort) Drain() (err error) {
+	return syscall.FlushFileBuffers(port.handle)
 }
 
 const (
@@ -376,6 +380,20 @@ func (port *windowsPort) SetReadTimeout(timeout time.Duration) error {
 
 	if err := setCommTimeouts(port.handle, commTimeouts); err != nil {
 		return &PortError{code: InvalidTimeoutValue, causedBy: err}
+	}
+
+	return nil
+}
+
+func (port *windowsPort) Break(d time.Duration) error {
+	if err := setCommBreak(port.handle); err != nil {
+		return &PortError{causedBy: err}
+	}
+
+	time.Sleep(d)
+
+	if err := clearCommBreak(port.handle); err != nil {
+		return &PortError{causedBy: err}
 	}
 
 	return nil
