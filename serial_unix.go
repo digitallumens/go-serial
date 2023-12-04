@@ -137,6 +137,12 @@ func (port *unixPort) SetMode(mode *Mode) error {
 	if err != nil {
 		return err
 	}
+
+	// RTS/CTS flow control
+	setTermSettingsCtsRts(mode.FlowControl == RtsCtsFlowControl, settings)
+	// XON/XOFF flow control
+	setTermSettingsXonXoff(mode.FlowControl == XonXoffFlowControl, settings)
+
 	if err := setTermSettingsParity(mode.Parity, settings); err != nil {
 		return err
 	}
@@ -238,19 +244,6 @@ func nativeOpen(portName string, mode *Mode) (*unixPort, error) {
 
 	// Set raw mode
 	setRawMode(settings)
-
-	// RTS/CTS flow control
-	if mode.FlowControl == RtsCtsFlowControl {
-		setTermSettingsCtsRts(true, settings)
-	} else {
-		setTermSettingsCtsRts(false, settings)
-	}
-
-	// XON/XOFF flow control
-	if mode.FlowControl == XonXoffFlowControl {
-		//setRawMode disables this, so the else condition isn't needed
-		setTermSettingsXonXoff(true, settings)
-	}
 
 	if port.setTermSettings(settings) != nil {
 		port.Close()

@@ -266,6 +266,14 @@ func (port *windowsPort) SetMode(mode *Mode) error {
 	}
 	params.StopBits = stopBitsMap[mode.StopBits]
 	params.Parity = parityMap[mode.Parity]
+	if mode.FlowControl == RtsCtsFlowControl {
+		// Enables CTS output flow control
+		params.Flags |= dcbOutXCTSFlow
+		// RTS input flow control could be added, but likely isn't necessary on the Windows side.
+		// It would require meshing with the way RTS control is implemented in this file.
+	} else {
+		params.Flags &^= dcbOutXCTSFlow
+	}
 	if setCommState(port.handle, &params) != nil {
 		port.Close()
 		return &PortError{code: InvalidSerialPort}
@@ -454,14 +462,6 @@ func nativeOpen(portName string, mode *Mode) (*windowsPort, error) {
 		if mode.InitialStatusBits.RTS {
 			params.Flags |= dcbRTSControlEnable
 		}
-	}
-	if mode.FlowControl == RtsCtsFlowControl {
-		// Enables CTS output flow control
-		params.Flags |= dcbOutXCTSFlow
-		// RTS input flow control could be added, but likely isn't necessary on the Windows side.
-		// It would require meshing with the way RTS control is implemented in this file.
-	} else {
-		params.Flags &^= dcbOutXCTSFlow
 	}
 	params.Flags &^= dcbOutXDSRFlow
 	params.Flags &^= dcbDSRSensitivity
